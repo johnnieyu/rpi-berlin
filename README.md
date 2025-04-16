@@ -28,6 +28,7 @@ The plan is:
 - There are a few missing components - I need bread boards and wire nuts. Ordered & arriving tomorrow. 
 - Ordered a 3D printer that arrived today. Won't know how to design the enclosure until I get the software and hardware working, but this is my first 3D printing project so I'll be doing some test prints and learning everything I need to design the camera shell. 
 - Started planning out the software architecuture - Github initiated today. 
+- Added cdmx.jpg to the /data directory, the first photo I hand-printed in NYC. 
 
 ### April 15, 2025
 
