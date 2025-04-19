@@ -47,29 +47,33 @@ def generate_poem(
     """
     base64_image = encode_image(image_path)
     
+    # Create the messages array with the correct structure for the latest OpenAI API
+    messages = [
+        {
+            "role": "system",
+            "content": system_prompt
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Please write a poem inspired by this image."
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_image}"
+                    }
+                }
+            ]
+        }
+    ]
+    
+    # Use the latest API style
     response = client.chat.completions.create(
         model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "Please write a poem inspired by this image."
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_image}"
-                        }
-                    }
-                ]
-            }
-        ],
+        messages=messages,
         max_tokens=max_tokens
     )
     
