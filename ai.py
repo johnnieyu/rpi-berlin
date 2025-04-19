@@ -19,8 +19,11 @@ from datetime import datetime
 # Load environment variables
 load_dotenv()
 
-# Initialize OpenAI client
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Initialize OpenAI client - use http_client=None to avoid proxy issues on Raspberry Pi
+client = openai.OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    http_client=None  # Explicitly set to None to avoid proxy-related errors
+)
 
 def encode_image(image_path: str) -> str:
     """Convert image to base64 string for OpenAI API."""
