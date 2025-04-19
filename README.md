@@ -23,12 +23,25 @@ The plan is:
 
 ## Journal
 
+### April 19, 2025
+
+- Cleaned up files
+- Refactored code to be more modular and easier to understand
+
+### April 18, 2025
+
+- Printer configured, first test prints with thermal printer working!
+- Troubleshooting a few hardware components - battery pack, wires, etc. 
+- Changed system_prompt.txt to haiku_prompt.txt and sonnet_prompt.txt for some variety. 
+- Added mac_debug.py to test the pipeline without the Raspberry Pi.
+
 ### April 16, 2025
 
 - There are a few missing components - I need bread boards and wire nuts. Ordered & arriving tomorrow. 
 - Ordered a 3D printer that arrived today. Won't know how to design the enclosure until I get the software and hardware working, but this is my first 3D printing project so I'll be doing some test prints and learning everything I need to design the camera shell. 
 - Started planning out the software architecuture - Github initiated today. 
-- Added cdmx.jpg to the /data directory, the first photo I hand-printed in NYC. 
+- Added cdmx.jpg to the /data directory, the first photo I hand-printed in NYC.
+- Printed a few test poems into console, all working correctly!
 
 ### April 15, 2025
 

@@ -1,3 +1,15 @@
+"""
+Step 1 along the pipeline.
+Capture an image from the camera and save it to the SD card.
+
+Steps:
+1. Initialize the camera
+2. Wait for button press
+3. Capture image
+4. Save image to SD card
+5. Clean up
+"""
+
 import os
 import time
 from pathlib import Path

@@ -1,7 +1,17 @@
+"""
+Step 2 along the pipeline.
+AI module for generating poems from images.
+
+Steps:
+1. Encode the image
+2. Generate a poem
+3. Save the poem to a file
+"""
+
 import os
 import base64
 from pathlib import Path
-from typing import Optional
+from typing import Literal
 import openai
 from dotenv import load_dotenv
 from datetime import datetime
@@ -17,7 +27,7 @@ def encode_image(image_path: str) -> str:
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-def generate_poem_from_image(
+def generate_poem(
     image_path: str,
     system_prompt: str,
     model: str = "gpt-4.1-mini",
@@ -65,11 +75,29 @@ def generate_poem_from_image(
     
     return response.choices[0].message.content
 
-def get_system_prompt() -> str:
-    prompt_path = Path("data/system_prompt.txt")
+def get_prompt(poem_type: Literal["sonnet", "haiku"]) -> str:
+    """
+    Get the appropriate prompt based on poem type.
     
-    # Default prompt if file doesn't exist or is empty
-    default_prompt = "Write a poem based on the image given."
+    Args:
+        poem_type: Type of poem to generate ("sonnet" or "haiku")
+    
+    Returns:
+        str: The prompt text
+    """
+    # Map poem types to prompt files
+    prompt_files = {
+        "sonnet": "data/sonnet_prompt.txt",
+        "haiku": "data/haiku_prompt.txt"
+    }
+    
+    prompt_path = Path(prompt_files[poem_type])
+    
+    # Default prompts if files don't exist or are empty
+    default_prompts = {
+        "sonnet": "Write a sonnet based on the image given.",
+        "haiku": "Write a haiku based on the image given."
+    }
     
     try:
         if prompt_path.exists():
@@ -78,31 +106,32 @@ def get_system_prompt() -> str:
                 if prompt:  # Only use file content if it's not empty
                     return prompt
     except Exception as e:
-        print(f"Warning: Could not read system prompt file: {e}")
+        print(f"Warning: Could not read {poem_type} prompt file: {e}")
     
-    return default_prompt
+    return default_prompts[poem_type]
 
 def process_image(
     demo_mode: bool = False,
-    system_prompt: Optional[str] = None
+    poem_type: Literal["sonnet", "haiku"] = "sonnet",
+    demo_image: str = "data/cdmx.jpg"
 ) -> str:
     """
     Process an image and generate a poem.
     
     Args:
-        demo_mode: If True, use the demo image from /data/cdmx.jpg
-        system_prompt: Custom system prompt for poem generation
+        demo_mode: If True, use the demo image
+        poem_type: Type of poem to generate ("sonnet" or "haiku")
+        demo_image: Path to the image to use in demo mode
     
     Returns:
         str: The generated poem
     """
-    # Get system prompt from file if none provided
-    if system_prompt is None:
-        system_prompt = get_system_prompt()
+    # Get appropriate prompt based on poem type
+    system_prompt = get_prompt(poem_type)
     
     # Determine image path based on demo mode
     if demo_mode:
-        image_path = Path("data/cdmx.jpg")
+        image_path = Path(demo_image)
     else:
         # In production mode, use the most recent image from the images directory
         images_dir = Path("images")
@@ -117,9 +146,9 @@ def process_image(
         image_path = max(image_files, key=lambda x: x.stat().st_mtime)
     
     # Generate and return the poem
-    return generate_poem_from_image(str(image_path), system_prompt)
+    return generate_poem(str(image_path), system_prompt)
 
-def get_next_serial_number(poems_dir: Path) -> int:
+def get_serial(poems_dir: Path) -> int:
     """
     Get the next available serial number for poem files.
     
@@ -129,33 +158,30 @@ def get_next_serial_number(poems_dir: Path) -> int:
     Returns:
         int: Next available serial number
     """
-    # Get all existing poem files
     existing_files = list(poems_dir.glob("*.txt"))
-    
     if not existing_files:
         return 1
     
-    # Extract serial numbers from existing filenames
     serial_numbers = []
     for file in existing_files:
         try:
-            # Split filename and extract the serial number
-            parts = file.stem.split('-')
-            if len(parts) >= 2:
-                serial = int(parts[1])
-                serial_numbers.append(serial)
+            serial = int(file.stem.split('-')[1])
+            serial_numbers.append(serial)
         except (ValueError, IndexError):
             continue
     
     return max(serial_numbers, default=0) + 1
 
-def save_poem(poem: str, image_path: Path) -> Path:
+def save_poem(
+    poem: str,
+    image_path: Path
+) -> Path:
     """
     Save the generated poem to a text file in the poems directory.
     
     Args:
         poem: The poem text to save
-        image_path: Path to the source image (used for filename generation)
+        image_path: Path to the source image
     
     Returns:
         Path: Path to the saved poem file
@@ -165,12 +191,11 @@ def save_poem(poem: str, image_path: Path) -> Path:
     poems_dir.mkdir(exist_ok=True)
     
     # Get current date and next serial number
-    date_str = datetime.now().strftime("%Y%m%d")
-    serial_number = get_next_serial_number(poems_dir)
+    date_str = datetime.now().strftime("%Y%m%d")  # Changed back to YYYYMMDD format
+    serial_number = get_serial(poems_dir)
     
-    # Generate filename with date, serial number, and image name
-    image_name = image_path.stem
-    poem_filename = f"{date_str}-{serial_number:03d}-{image_name}.txt"
+    # Generate filename with date and serial number
+    poem_filename = f"{date_str}-{serial_number:03d}.txt"
     poem_path = poems_dir / poem_filename
     
     # Save the poem
@@ -178,28 +203,3 @@ def save_poem(poem: str, image_path: Path) -> Path:
         f.write(poem)
     
     return poem_path
-
-if __name__ == "__main__":
-    # Example usage
-    try:
-        # Set demo mode
-        demo_mode = True  # Set to False to use images from /images directory
-        
-        # Generate poem and get the image path used
-        poem = process_image(demo_mode=demo_mode)
-        
-        # Get the image path that was used
-        image_path = Path("data/cdmx.jpg") if demo_mode else max(Path("images").glob("*.jpg"), key=lambda x: x.stat().st_mtime)
-        
-        # Save poem to file
-        saved_path = save_poem(poem, image_path)
-        
-        print("Generated Poem:")
-        print("-" * 40)
-        print(poem)
-        print("-" * 40)
-        print("            a poem by berlin            ")
-        print("             @notnotjohnnie             ")
-        print(f"\nPoem saved to: {saved_path}")
-    except Exception as e:
-        print(f"Error: {e}")
